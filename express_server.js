@@ -12,8 +12,15 @@ const urlDatabase = {
 };
 
 
-const generateRandomString = function () {
-  
+const generateRandomString = function (length) {
+  const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const lengthOfCharacters = characters.length
+  let result = '';
+
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.round(Math.random() * lengthOfCharacters)) 
+  }
+  return result;
 };
 
 app.get("/", (req, res) => {
@@ -25,19 +32,26 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-app.post("/urls", (req, res) => {
-  console.log(req.body);
-  res.send("Ok");
-})
-
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+app.post("/urls", (req, res) => {
+  console.log(req.body);
+  const newId = generateRandomString(6);
+  urlDatabase[newId] = req.body.longURL;
+  res.redirect(`/urls/${newId}`);
+  // res.send("Ok");
+});
 
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
+});
+
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
 });
 
 app.get("/urls.json", (req, res) => {
