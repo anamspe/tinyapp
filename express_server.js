@@ -51,10 +51,16 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('username', `${req.body.username}`)
-  console.log('Cookies:', req.cookies);
+  const username = req.body.username
+  res.cookie('username', username)
   res.redirect("/urls")
-})
+});
+
+app.post("/logout", (req, res) => {
+  const username = req.body.username
+res.clearCookie('username', username);
+res.redirect("urls");
+});
 
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
