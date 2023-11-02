@@ -9,20 +9,6 @@ const generateRandomString = function(length) {
   return result;
 };
 
-const users = {
-  abc: {
-    id: "abc",
-    email: "a@a.com",
-    password: "1234",
-  },
-
-  def: {
-    id: "def",
-    email: "b@b.com",
-    password: "0987",
-  }
-
-};
 
 const checkUsersEmail = function(email, obj) {
   const keys = Object.keys(obj)

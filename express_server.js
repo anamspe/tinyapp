@@ -32,7 +32,21 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+// if (req.cookies) {
+//   app.get('/login', (req, res) => {
+//     res.redirect('urls')
+//   });
+
+//   app.get('/register', (req, res) => {
+//     res.redirect('urls')
+//   });
+// }
+
 app.get("/login", (req, res) => {
+  if (req.cookies['email']) {
+    return res.redirect('urls');
+  }
+
   const templateVars = { email: req.cookies["email"] };
   res.render("login", templateVars);
 });
@@ -46,6 +60,10 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
+  if (req.cookies['email']) {
+    return res.redirect('urls');
+  }
+  
   const templateVars = {
     user_id: req.cookies["id"],
     email: req.cookies["email"],
