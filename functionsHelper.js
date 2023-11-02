@@ -9,17 +9,35 @@ const generateRandomString = function(length) {
   return result;
 };
 
-const checkUsers = function(email, obj) {
+const users = {
+  abc: {
+    id: "abc",
+    email: "a@a.com",
+    password: "1234",
+  },
+
+  def: {
+    id: "def",
+    email: "b@b.com",
+    password: "0987",
+  }
+
+};
+
+const checkUsersEmail = function(email, obj) {
   const keys = Object.keys(obj)
 
   for (const each of keys) {
     if (email === obj[each]['email']) {
-      return obj[each];
+      const user = obj[each]
+      return user;
     }
-    return null;
   }
+  return null;
 };
 
+// console.log(checkUsersEmail('b@b.com', users));
+// checkUsersEmail('b@b.com', users);
 
 
-module.exports = { generateRandomString, checkUsers }
+module.exports = { generateRandomString, checkUsersEmail }
