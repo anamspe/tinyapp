@@ -46,7 +46,10 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { email: req.cookies["email"] };
+  const templateVars = {
+    user_id: req.cookies["id"],
+    email: req.cookies["email"],
+  };
   res.render("register", templateVars);
 });
 
@@ -66,6 +69,7 @@ app.post("/urls", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const user_id = checkUsersEmail(email, users)["id"];
 
   if (!checkUsersEmail(email, users)) {
     return res
@@ -74,20 +78,25 @@ app.post("/login", (req, res) => {
   }
 
   if (checkUsersEmail(email, users)) {
-    if (password !== checkUsersEmail(email, users)['password']) {
+    if (password !== checkUsersEmail(email, users)["password"]) {
       return res
-      .status(403)
-      .send('Sorry, the password you entered is incorrect. Please try again.')
+        .status(403)
+        .send(
+          "Sorry, the password you entered is incorrect. Please try again."
+        );
     }
   }
 
+  res.cookie("user_id", user_id);
   res.cookie("email", email);
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
   const email = req.body.email;
+  const user_id = req.body.user_id
   res.clearCookie("email", email);
+  res.clearCookie("user_id", user_id)
   res.redirect("login");
 });
 
