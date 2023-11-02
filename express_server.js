@@ -11,7 +11,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
+  "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
 
@@ -32,23 +32,13 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-// if (req.cookies) {
-//   app.get('/login', (req, res) => {
-//     res.redirect('urls')
-//   });
-
-//   app.get('/register', (req, res) => {
-//     res.redirect('urls')
-//   });
-// }
-
 app.get("/login", (req, res) => {
-  if (req.cookies['email']) {
-    return res.redirect('urls');
+  if (req.cookies["email"]) {
+    return res.redirect("/urls");
   }
 
   const templateVars = { email: req.cookies["email"] };
-  res.render("login", templateVars);
+  return res.render("login", templateVars);
 });
 
 app.get("/urls", (req, res) => {
@@ -56,31 +46,40 @@ app.get("/urls", (req, res) => {
     email: req.cookies["email"],
     urls: urlDatabase,
   };
-  res.render("urls_index", templateVars);
+  return res.render("urls_index", templateVars);
 });
 
 app.get("/register", (req, res) => {
-  if (req.cookies['email']) {
-    return res.redirect('urls');
+  if (req.cookies["email"]) {
+    return res.redirect("/urls");
   }
-  
+
   const templateVars = {
     user_id: req.cookies["id"],
     email: req.cookies["email"],
   };
-  res.render("register", templateVars);
+  return res.render("register", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
+  if (!req.cookies["email"]) {
+    return res.redirect("/login");
+  }
+
   const templateVars = { email: req.cookies["email"] };
-  res.render("urls_new", templateVars);
+  return res.render("urls_new", templateVars);
 });
 
 app.post("/urls", (req, res) => {
   // console.log(req.body);
+  if (!req.cookies["email"]) {
+    return res.send(
+      "Sorry, you need to be logged in to shorten URLs. Please log in or create an account to access this feature."
+    );
+  }
   const newId = generateRandomString(6);
   urlDatabase[newId] = req.body.longURL;
-  res.redirect(`/urls/${newId}`);
+  return res.redirect(`/urls/${newId}`);
   // res.send("Ok");
 });
 
@@ -107,15 +106,15 @@ app.post("/login", (req, res) => {
 
   res.cookie("user_id", user_id);
   res.cookie("email", email);
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
   const email = req.body.email;
-  const user_id = req.body.user_id
+  const user_id = req.body.user_id;
   res.clearCookie("email", email);
-  res.clearCookie("user_id", user_id)
-  res.redirect("login");
+  res.clearCookie("user_id", user_id);
+  return res.redirect("login");
 });
 
 app.post("/register", (req, res) => {
@@ -135,12 +134,12 @@ app.post("/register", (req, res) => {
 
   users[user_id] = { id: user_id, email, password };
   res.cookie("email", email);
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -149,21 +148,25 @@ app.get("/urls/:id", (req, res) => {
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
   };
-  res.render("urls_show", templateVars);
+  return res.render("urls_show", templateVars);
 });
 
 app.post("/urls/:id", (req, res) => {
   urlDatabase[req.params.id] = req.body.newURL;
-  res.redirect("/urls");
+  return res.redirect("/urls");
 });
 
 app.get("/u/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    return res.send("Oops, the shortened URL you're trying to access doesn't exist in our database. Please make sure you have the correct URL or create a new shortened link.")
+  }
+
   const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  return res.redirect(longURL);
 });
 
 app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+  return res.json(urlDatabase);
 });
 
 app.listen(PORT, () => {
