@@ -10,19 +10,30 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const urlDatabase = {
+const urlDatabase0 = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
 };
 
+const urlDatabase = {
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "abc123",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "abc123",
+  },
+};
+
 const users = {
   abc: {
-    id: "abc",
+    id: "abc123",
     email: "a@a.com",
     password: "1234",
   },
   def: {
-    id: "def",
+    id: "def098",
     email: "b@b.com",
     password: "0987",
   },
@@ -78,7 +89,7 @@ app.post("/urls", (req, res) => {
     );
   }
   const newId = generateRandomString(6);
-  urlDatabase[newId] = req.body.longURL;
+  urlDatabase[newId] = {longURL: req.body.longURL, userID: req.cookies["user_id"]};
   return res.redirect(`/urls/${newId}`);
   // res.send("Ok");
 });
