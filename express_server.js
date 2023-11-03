@@ -1,5 +1,5 @@
 // const { render } = require("ejs");
-const { generateRandomString, checkUsersEmail, urlsForUser } = require("./functionsHelper");
+const { generateRandomString, checkUsersEmail, urlsForUser } = require("./helperFunctions");
 
 const express = require("express");
 const cookieSession = require("cookie-session");

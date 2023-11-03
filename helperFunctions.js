@@ -10,32 +10,27 @@ const generateRandomString = function(length) {
 };
 
 
-const checkUsersEmail = function(email, obj) {
-  const keys = Object.keys(obj)
+const checkUsersEmail = function(email, database) {
+  const keys = Object.keys(database)
 
   for (const each of keys) {
-    if (email === obj[each]['email']) {
-      const user = obj[each]
+    if (email === database[each]['email']) {
+      const user = database[each]
       return user;
     }
   }
   return null;
 };
 
-// console.log(checkUsersEmail('b@b.com', users));
-// checkUsersEmail('b@b.com', users);
 
-
-const urlsForUser = function(id, urlDatabase) {
+const urlsForUser = function(id, database) {
   const urls = {};
 
-  for (const shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === id) {
-      urls[shortURL] = {longURL: urlDatabase[shortURL].longURL}
+  for (const shortURL in database) {
+    if (database[shortURL].userID === id) {
+      urls[shortURL] = {longURL: database[shortURL].longURL}
     }
   }
-
-
   return urls;
 }
 
