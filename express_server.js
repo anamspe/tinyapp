@@ -8,14 +8,11 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = 8080; // default port 8080
 
-app.set("view engine", "ejs");
-app.use(express.urlencoded({ extended: true }));
+app.set("view engine", "ejs"); // allows you to use ejs templates
+app.use(express.urlencoded({ extended: true })); // creates req.body
 app.use(cookieSession( {
   name: 'session',
-  keys: [/* secret keys */],
-
-  // Cookie Options
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  keys: ["hellothisisakey"],
 }));
 
 const urlDatabase = {
@@ -51,21 +48,21 @@ app.get("/", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  if (req.cookies["email"]) {
+  if (req.session["email"]) {
     return res.redirect("/urls");
   }
 
-  const templateVars = { email: req.cookies["email"] };
+  const templateVars = { email: req.session["email"] };
   return res.render("login", templateVars);
 });
 
 app.get("/urls", (req, res) => {
-  const userId = req.cookies['user_id'];
+  const userId = req.session['user_id'];
   const url = urlsForUser(userId, urlDatabase);
 
   const templateVars = {
     user_id: userId,
-    email: req.cookies["email"],
+    email: req.session["email"],
     urls: url,
   };
   // console.log(templateVars['urls']);
@@ -73,35 +70,35 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  if (req.cookies["email"]) {
+  if (req.session["email"]) {
     return res.redirect("/urls");
   }
 
   const templateVars = {
-    user_id: req.cookies["id"],
-    email: req.cookies["email"],
+    user_id: req.session["id"],
+    email: req.session["email"],
   };
   return res.render("register", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  if (!req.cookies["email"]) {
+  if (!req.session["email"]) {
     return res.redirect("/login");
   }
 
-  const templateVars = { email: req.cookies["email"] };
+  const templateVars = { email: req.session["email"] };
   return res.render("urls_new", templateVars);
 });
 
 app.post("/urls", (req, res) => {
   // console.log(req.body);
-  if (!req.cookies["email"]) {
+  if (!req.session["email"]) {
     return res.send(
       "Sorry, you need to be logged in to shorten URLs. Please log in or create an account to access this feature."
     );
   }
   const newId = generateRandomString(6);
-  urlDatabase[newId] = {longURL: req.body.longURL, userID: req.cookies["user_id"]};
+  urlDatabase[newId] = {longURL: req.body.longURL, userID: req.session["user_id"]};
   console.log(urlDatabase);
   return res.redirect(`/urls/${newId}`);
   // res.send("Ok");
@@ -130,16 +127,15 @@ app.post("/login", (req, res) => {
     }
   }
 
-  res.cookie("user_id", userId);
-  res.cookie("email", email);
+  req.session.user_id = userId;
+  req.session.email = email;
   return res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  const email = req.body.email;
-  const userId = req.body.user_id;
-  res.clearCookie("email", email);
-  res.clearCookie("user_id", userId);
+
+  req.session.email = null;
+  req.session.user_id = null;
   return res.redirect("login");
 });
 
@@ -160,17 +156,15 @@ app.post("/register", (req, res) => {
   }
 
   users[userId] = { id: userId, email, password };
-  res.cookie("email", email);
-  res.cookie("user_id", userId);
+  req.session.user_id = userId;
+  req.session.email = email;
   return res.redirect("/urls");
 });
 
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
-  const userId = req.cookies['user_id'];
+  const userId = req.session['user_id'];
   const shortURLObj = urlDatabase[id];
-  console.log(id);
-  console.log(userId);
 
   if (!userId) {
     return res.send("Access to this URL is restricted to logged-in users. Please log in to view this page.")
@@ -190,7 +184,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
-  const userId = req.cookies['user_id'];
+  const userId = req.session['user_id'];
 
   if (!userId) {
     return res.send("Access to this URL is restricted to logged-in users. Please log in to view this page.");
@@ -204,7 +198,7 @@ app.get("/urls/:id", (req, res) => {
   }
 
   const templateVars = {
-    email: req.cookies["email"],
+    email: req.session["email"],
     id: req.params.id,
     longURL: urlDatabase[req.params.id]['longURL'],
   };
@@ -214,7 +208,7 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const id = req.params.id
   const shortURLObj = urlDatabase[id]
-  const userId = req.cookies['user_id']
+  const userId = req.session['user_id']
   
   if (!userId) {
     return res.send("To access this feature, you must be logged in. Please log in to continue.")
@@ -246,5 +240,5 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`Tinyapp listening on port ${PORT}!`);
 });
