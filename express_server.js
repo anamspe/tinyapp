@@ -1,19 +1,24 @@
-// const { render } = require("ejs");
-const { generateRandomString, checkUsersEmail, urlsForUser } = require("./helperFunctions");
+const {
+  generateRandomString,
+  checkUsersEmail,
+  urlsForUser,
+} = require("./helperFunctions");
 
 const express = require("express");
 const cookieSession = require("cookie-session");
-const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
 
 const app = express();
 const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs"); // allows you to use ejs templates
 app.use(express.urlencoded({ extended: true })); // creates req.body
-app.use(cookieSession({
-  name: 'session',
-  keys: ["hellothisisakey"],
-}));
+app.use(
+  cookieSession({
+    name: "session",
+    keys: ["hellothisisakey"],
+  })
+);
 
 const urlDatabase = {
   b6UTxQ: {
@@ -26,7 +31,7 @@ const urlDatabase = {
   },
 };
 
-const plaintextPassword = '1234';
+const plaintextPassword = "1234";
 const salt = bcrypt.genSaltSync(10);
 const userPassword = bcrypt.hashSync(plaintextPassword, salt);
 
@@ -49,7 +54,7 @@ const users = {
 
 // Home page - redirects to My URLs page
 app.get("/", (req, res) => {
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 // Login page
@@ -86,7 +91,7 @@ app.get("/urls/new", (req, res) => {
 
 // My URLs page
 app.get("/urls", (req, res) => {
-  const userId = req.session['user_id'];
+  const userId = req.session["user_id"];
   const url = urlsForUser(userId, urlDatabase);
 
   const templateVars = {
@@ -94,30 +99,36 @@ app.get("/urls", (req, res) => {
     email: req.session["email"],
     urls: url,
   };
-  
+
   return res.render("urls_index", templateVars);
 });
 
 // Single shortened URL page
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
-  const userId = req.session['user_id'];
+  const userId = req.session["user_id"];
 
   if (!userId) {
-    return res.send("Access to this URL is restricted to logged-in users. Please log in to view this page.");
+    return res.send(
+      "Access to this URL is restricted to logged-in users. Please log in to view this page."
+    );
   }
   if (!urlDatabase[id]) {
-    return res.send("Oops, the shortened URL you're trying to access doesn't exist in our database. Please make sure you have the correct URL or create a new shortened link.");
+    return res.send(
+      "Oops, the shortened URL you're trying to access doesn't exist in our database. Please make sure you have the correct URL or create a new shortened link."
+    );
   }
 
-  if (userId !== urlDatabase[id]['userID']) {
-    return res.send("Access to this URL is restricted to its owner. Please ensure you have the correct access privileges to view this page.");
+  if (userId !== urlDatabase[id]["userID"]) {
+    return res.send(
+      "Access to this URL is restricted to its owner. Please ensure you have the correct access privileges to view this page."
+    );
   }
 
   const templateVars = {
     email: req.session["email"],
     id: req.params.id,
-    longURL: urlDatabase[req.params.id]['longURL'],
+    longURL: urlDatabase[req.params.id]["longURL"],
   };
   return res.render("urls_show", templateVars);
 });
@@ -125,17 +136,14 @@ app.get("/urls/:id", (req, res) => {
 // Redirect shortened URL route
 app.get("/u/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
-    return res.send("Oops, the shortened URL you're trying to access doesn't exist in our database. Please make sure you have the correct URL or create a new shortened link.");
+    return res.send(
+      "Oops, the shortened URL you're trying to access doesn't exist in our database. Please make sure you have the correct URL or create a new shortened link."
+    );
   }
 
-  const longURL = urlDatabase[req.params.id]['longURL'];
+  const longURL = urlDatabase[req.params.id]["longURL"];
   return res.redirect(longURL);
 });
-
-// Json String of My URLs page
-// app.get("/urls.json", (req, res) => {
-//   return res.json(urlDatabase);
-// });
 
 
 ////////////////////////////////////////////////////
@@ -173,7 +181,6 @@ app.post("/login", (req, res) => {
 
 // Logout action
 app.post("/logout", (req, res) => {
-
   req.session.email = null;
   req.session.user_id = null;
   return res.redirect("login");
@@ -204,37 +211,48 @@ app.post("/register", (req, res) => {
 
 // Shorten URLs action
 app.post("/urls", (req, res) => {
-  // console.log(req.body);
   if (!req.session["email"]) {
     return res.send(
       "Sorry, you need to be logged in to shorten URLs. Please log in or create an account to access this feature."
     );
   }
+
+  if (!req.body.longURL) {
+    return res.send("Please insert a valid URL");
+  }
+
   const newId = generateRandomString(6);
-  urlDatabase[newId] = { longURL: req.body.longURL, userID: req.session["user_id"] };
-  console.log(urlDatabase);
+  urlDatabase[newId] = {
+    longURL: req.body.longURL,
+    userID: req.session["user_id"],
+  };
   return res.redirect(`/urls/${newId}`);
-  // res.send("Ok");
 });
 
 // Delete shortened URL
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
-  const userId = req.session['user_id'];
+  const userId = req.session["user_id"];
   const shortURLObj = urlDatabase[id];
 
   if (!userId) {
-    return res.send("Access to this URL is restricted to logged-in users. Please log in to view this page.");
+    return res.send(
+      "Access to this URL is restricted to logged-in users. Please log in to view this page."
+    );
   }
 
   if (!shortURLObj) {
-    return res.send("The requested ID does not exist. Please check the provided ID and try again.");
+    return res.send(
+      "The requested ID does not exist. Please check the provided ID and try again."
+    );
   }
 
   if (userId !== shortURLObj.userID) {
-    return res.send("Access denied. This URL does not belong to your account. Please ensure you are the rightful owner to view or modify this URL.");
+    return res.send(
+      "Access denied. This URL does not belong to your account. Please ensure you are the rightful owner to view or modify this URL."
+    );
   }
-  
+
   delete urlDatabase[id];
   return res.redirect("/urls");
 });
@@ -243,18 +261,28 @@ app.post("/urls/:id/delete", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
   const shortURLObj = urlDatabase[id];
-  const userId = req.session['user_id'];
-  
+  const userId = req.session["user_id"];
+
   if (!userId) {
-    return res.send("To access this feature, you must be logged in. Please log in to continue.");
+    return res.send(
+      "To access this feature, you must be logged in. Please log in to continue."
+    );
   }
 
   if (!shortURLObj) {
-    return res.send("The requested ID does not exist. Please check the provided ID and try again.");
+    return res.send(
+      "The requested ID does not exist. Please check the provided ID and try again."
+    );
   }
 
   if (userId !== shortURLObj.userID) {
-    return res.send("Access denied. This URL does not belong to your account. Please ensure you are the rightful owner to view or modify this URL.");
+    return res.send(
+      "Access denied. This URL does not belong to your account. Please ensure you are the rightful owner to view or modify this URL."
+    );
+  }
+
+  if (!req.body.newURL) {
+    return res.send("Please insert a valid URL");
   }
 
   shortURLObj.longURL = req.body.newURL;
