@@ -1,3 +1,4 @@
+// Creates random string to be used as User IDs or short URLs
 const generateRandomString = function(length) {
   const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   const lengthOfCharacters = characters.length;
@@ -9,7 +10,7 @@ const generateRandomString = function(length) {
   return result;
 };
 
-
+// Checks if user exists by checking the user database
 const checkUsersEmail = function(email, database) {
   const keys = Object.keys(database)
 
@@ -22,7 +23,7 @@ const checkUsersEmail = function(email, database) {
   return null;
 };
 
-
+// Finds the long URLs for a single user ID
 const urlsForUser = function(id, database) {
   const urls = {};
 
