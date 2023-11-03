@@ -26,6 +26,9 @@
       <h3>My URLs</h3>
       <table class="table">
         <thead>
+          <% if (!user_id) { %>
+            <p> You won't be able to view URLs unless you're logged in. Please log in to access your URLs. </p>
+          <% } else { %>
           <tr>
             <th scope="col">Short URL ID</th>
             <th scope="col">Long URL</th>
@@ -37,7 +40,7 @@
           <% for (let id in urls) { %>
             <tr>
               <td><a href="/u/<%= id %>"><%= id %></a></td>
-              <td><%= urls[id] %></td>
+              <td><%= urls[id].longURL %></td>
               <td>
                 <a href="/urls/<%= id %>" class="btn btn-outline-primary">Edit</a>
               </td>
@@ -47,6 +50,7 @@
             </tr>
           <% } %>
         </tbody>
+        <% } %>
       </table>
     </main>
     <!-- Bootstrap JS -->

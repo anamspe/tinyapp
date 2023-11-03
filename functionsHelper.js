@@ -26,4 +26,17 @@ const checkUsersEmail = function(email, obj) {
 // checkUsersEmail('b@b.com', users);
 
 
-module.exports = { generateRandomString, checkUsersEmail }
+const urlsForUser = function(id, urlDatabase) {
+  const urls = {};
+
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === id) {
+      urls[shortURL] = {longURL: urlDatabase[shortURL].longURL}
+    }
+  }
+
+
+  return urls;
+}
+
+module.exports = { generateRandomString, checkUsersEmail, urlsForUser }

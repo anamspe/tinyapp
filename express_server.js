@@ -1,5 +1,5 @@
 // const { render } = require("ejs");
-const { generateRandomString, checkUsersEmail } = require("./functionsHelper");
+const { generateRandomString, checkUsersEmail, urlsForUser } = require("./functionsHelper");
 
 const express = require("express");
 const cookieParser = require("cookie-parser");
@@ -53,10 +53,15 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  const user_id = req.cookies['user_id'];
+  const url = urlsForUser(user_id, urlDatabase);
+
   const templateVars = {
+    user_id: req.cookies['user_id'],
     email: req.cookies["email"],
-    urls: urlDatabase,
+    urls: url,
   };
+  // console.log(templateVars['urls']);
   return res.render("urls_index", templateVars);
 });
 
@@ -90,6 +95,7 @@ app.post("/urls", (req, res) => {
   }
   const newId = generateRandomString(6);
   urlDatabase[newId] = {longURL: req.body.longURL, userID: req.cookies["user_id"]};
+  console.log(urlDatabase);
   return res.redirect(`/urls/${newId}`);
   // res.send("Ok");
 });
@@ -129,7 +135,7 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const user_id = generateRandomString(3);
+  const user_id = generateRandomString(6);
   const email = req.body.email;
   const password = req.body.password;
 
@@ -149,21 +155,69 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
+  const id = req.params.id;
+  const user_id = req.cookies['user_id'];
+  const shortURLObj = urlDatabase[id];
+  console.log(id);
+  console.log(user_id);
+
+  if (!user_id) {
+    return res.send("Access to this URL is restricted to logged-in users. Please log in to view this page.")
+  }
+
+  if (!shortURLObj) {
+    return res.send("The requested ID does not exist. Please check the provided ID and try again.")
+  }
+
+  if(user_id !== shortURLObj.userID) {
+    return res.send("Access denied. This URL does not belong to your account. Please ensure you are the rightful owner to view or modify this URL.")
+  }
+  
+  delete urlDatabase[id];
   return res.redirect("/urls");
 });
 
 app.get("/urls/:id", (req, res) => {
+  const id = req.params.id;
+  const user_id = req.cookies['user_id'];
+
+  if (!user_id) {
+    return res.send("Access to this URL is restricted to logged-in users. Please log in to view this page.");
+  }
+  if (!urlDatabase[id]) {
+    return res.send("Oops, the shortened URL you're trying to access doesn't exist in our database. Please make sure you have the correct URL or create a new shortened link.");
+  }
+
+  if (user_id !== urlDatabase[id]['userID']) {
+    return res.send("Access to this URL is restricted to its owner. Please ensure you have the correct access privileges to view this page.")
+  }
+
   const templateVars = {
     email: req.cookies["email"],
     id: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    longURL: urlDatabase[req.params.id]['longURL'],
   };
   return res.render("urls_show", templateVars);
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.newURL;
+  const id = req.params.id
+  const shortURLObj = urlDatabase[id]
+  const user_id = req.cookies['user_id']
+  
+  if (!user_id) {
+    return res.send("To access this feature, you must be logged in. Please log in to continue.")
+  }
+
+  if (!shortURLObj) {
+    return res.send("The requested ID does not exist. Please check the provided ID and try again.");
+  }
+
+  if (user_id !== shortURLObj.userID) {
+    return res.send("Access denied. This URL does not belong to your account. Please ensure you are the rightful owner to view or modify this URL.")
+  }
+
+  shortURLObj.longURL = req.body.newURL;
   return res.redirect("/urls");
 });
 
@@ -172,7 +226,7 @@ app.get("/u/:id", (req, res) => {
     return res.send("Oops, the shortened URL you're trying to access doesn't exist in our database. Please make sure you have the correct URL or create a new shortened link.")
   }
 
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id]['longURL'];
   return res.redirect(longURL);
 });
 
